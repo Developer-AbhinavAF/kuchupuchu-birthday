@@ -67,6 +67,38 @@ export default function LetterSection() {
       }
     );
 
+    // Animate photo cards with red string
+    const photoCards = section.querySelectorAll(".photo-card");
+    gsap.fromTo(
+      photoCards,
+      { opacity: 0, scale: 0.8, y: 30 },
+      {
+        opacity: 1,
+        scale: 1,
+        y: 0,
+        duration: 0.8,
+        stagger: 0.3,
+        ease: "back.out(1.7)",
+        delay: 1.2,
+      }
+    );
+
+    // Animate red string
+    const redString = section.querySelector(".red-string-svg");
+    if (redString) {
+      gsap.fromTo(
+        redString,
+        { opacity: 0, strokeDasharray: 1000, strokeDashoffset: 1000 },
+        {
+          opacity: 1,
+          strokeDashoffset: 0,
+          duration: 2,
+          ease: "power2.out",
+          delay: 1.5,
+        }
+      );
+    }
+
     const flowerAccents = section.querySelectorAll(".letter-flower-accent");
     gsap.fromTo(
       flowerAccents,
@@ -77,7 +109,7 @@ export default function LetterSection() {
         duration: 0.6,
         stagger: 0.4,
         ease: "back.out(2)",
-        delay: 1.5,
+        delay: 1.8,
       }
     );
   };
@@ -122,7 +154,7 @@ export default function LetterSection() {
           </div>
         </div>
       ) : (
-        /* Letter paper */
+        /* Enhanced letter paper with scrollbar and photo cards */
         <div className="letter-paper-container">
           <div className="letter-paper">
             {/* Paper texture lines */}
@@ -159,6 +191,57 @@ export default function LetterSection() {
               <div className="letter-closing">
                 <p className="letter-closing-text">{birthdayConfig.letterClosing}</p>
                 <p className="letter-signature">{birthdayConfig.senderName}</p>
+              </div>
+
+              {/* Photo cards with red string - moved to bottom */}
+              <div className="photo-cards-container">
+                <svg className="red-string-svg" viewBox="0 0 400 1200" aria-hidden="true">
+                  {/* Enhanced zigzag red string connecting all photos */}
+                  <path
+                    d="M 50 80 Q 100 120 50 160 Q 0 200 50 240 Q 100 280 50 320 Q 0 360 50 400 Q 100 440 50 480 Q 0 520 50 560 Q 100 600 50 640 Q 0 680 50 720 Q 100 760 50 800 Q 0 840 50 880 Q 100 920 50 960 Q 0 1000 50 1040 Q 100 1080 50 1120"
+                    stroke="#DC2626"
+                    strokeWidth="2"
+                    fill="none"
+                    strokeDasharray="5,5"
+                    className="red-string-path"
+                  />
+                  {/* Small hearts along the string - more hearts for more photos */}
+                  {[80, 160, 240, 320, 400, 480, 560, 640, 720, 800, 880, 960, 1040].map((y, i) => (
+                    <text
+                      key={i}
+                      x="25"
+                      y={y}
+                      fontSize="12"
+                      fill="#DC2626"
+                      className="string-heart"
+                    >
+                      ♥
+                    </text>
+                  ))}
+                </svg>
+
+                {Array.isArray(birthdayConfig.letterPhotoCards) ? birthdayConfig.letterPhotoCards.map((card, i) => (
+                  <div
+                    key={i}
+                    className={`photo-card ${card.position}`}
+                    style={{ top: `${60 + i * 100}px` }}
+                  >
+                    <div className="photo-card-inner">
+                      <img
+                        src={card.path}
+                        alt={card.caption}
+                        className="photo-card-image"
+                      />
+                      <div className="photo-card-caption">
+                        <p>{card.caption}</p>
+                      </div>
+                      <div className="photo-card-pin">
+                        <div className="pin-head" />
+                        <div className="pin-body" />
+                      </div>
+                    </div>
+                  </div>
+                )) : null}
               </div>
 
               <div className="letter-flower-accent letter-bottom-flower" aria-hidden="true">

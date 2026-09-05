@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-
-
+import { birthdayConfig } from "@/data/birthdayConfig";
 
 type CatState = "cute" | "confused" | "annoyed" | "angry" | "frustrated" | "pleading";
 
@@ -37,6 +36,7 @@ export default function GiftQuestion({ onYes }: GiftQuestionProps) {
   const [catAnimating, setCatAnimating] = useState(false);
   const [yesScale, setYesScale] = useState(1.0);
   const [noVisible, setNoVisible] = useState(true);
+  const [floatingHearts, setFloatingHearts] = useState<number[]>([]);
   const sectionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -52,15 +52,36 @@ export default function GiftQuestion({ onYes }: GiftQuestionProps) {
     return () => clearTimeout(t);
   }, [noCount]);
 
+  // Add floating hearts animation
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setFloatingHearts(prev => [...prev, Date.now()].slice(-10));
+    }, 800);
+    return () => clearInterval(interval);
+  }, []);
+
   const handleNo = () => {
     setNoCount((c) => c + 1);
+    // Add shake animation
+    if (sectionRef.current) {
+      sectionRef.current.style.animation = "none";
+      setTimeout(() => {
+        if (sectionRef.current) {
+          sectionRef.current.style.animation = "shake 0.5s ease";
+        }
+      }, 10);
+    }
   };
 
   const handleYes = () => {
+    // Celebration effect
+    setFloatingHearts(Array.from({ length: 20 }, () => Date.now() + Math.random() * 1000));
+    
     if (sectionRef.current) {
-      sectionRef.current.style.transition = "opacity 0.8s ease";
+      sectionRef.current.style.transition = "opacity 1.2s ease, transform 1.2s ease";
       sectionRef.current.style.opacity = "0";
-      setTimeout(onYes, 900);
+      sectionRef.current.style.transform = "scale(1.1)";
+      setTimeout(onYes, 1300);
     }
   };
 
@@ -76,18 +97,52 @@ export default function GiftQuestion({ onYes }: GiftQuestionProps) {
       ref={sectionRef}
       className="gift-question-scene"
     >
-      {/* Floating petals background */}
+      {/* Enhanced floating petals background */}
       <div className="petals-bg" aria-hidden="true">
-        {Array.from({ length: 18 }).map((_, i) => (
+        {Array.from({ length: 30 }).map((_, i) => (
           <div
             key={i}
             className="floating-petal"
             style={{
               left: `${Math.random() * 100}%`,
-              animationDelay: `${i * 0.4}s`,
-              animationDuration: `${6 + Math.random() * 8}s`,
+              animationDelay: `${i * 0.3}s`,
+              animationDuration: `${5 + Math.random() * 10}s`,
             }}
           />
+        ))}
+      </div>
+
+      {/* Floating hearts */}
+      <div className="hearts-bg" aria-hidden="true">
+        {floatingHearts.map((timestamp) => (
+          <div
+            key={timestamp}
+            className="floating-heart"
+            style={{
+              left: `${20 + Math.random() * 60}%`,
+              animationDelay: `${Math.random() * 2}s`,
+            }}
+          >
+            💕
+          </div>
+        ))}
+      </div>
+
+      {/* Animated sparkles */}
+      <div className="sparkles-bg" aria-hidden="true">
+        {Array.from({ length: 15 }).map((_, i) => (
+          <div
+            key={i}
+            className="sparkle"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              animationDelay: `${i * 0.5}s`,
+              animationDuration: `${2 + Math.random() * 3}s`,
+            }}
+          >
+            ✨
+          </div>
         ))}
       </div>
 
@@ -100,34 +155,68 @@ export default function GiftQuestion({ onYes }: GiftQuestionProps) {
       </div>
 
       <div className="gift-content">
-        {/* Message */}
+        {/* Message with enhanced animation */}
         <div className="question-message">
           <p className="question-text">{CAT_MESSAGES[catState]}</p>
         </div>
 
-        {/* Cat illustration */}
+        {/* Realistic cat video with enhanced container */}
         <div
           className={`cat-container ${catAnimating ? "cat-animating" : ""}`}
           style={{ transform: catAnimating ? "scale(0.85) translateY(10px)" : rotation }}
           aria-label={`Cat feeling ${catState}`}
         >
-          {/* Cat emoji fallback / SVG cat */}
-          <div className="cat-illustration">
-            <CatSVG state={catState} />
+          {/* Realistic cat video */}
+          <div className="cat-video-container">
+            <video
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="cat-video"
+              poster="/assets/images/app_logo.png"
+            >
+              <source src={birthdayConfig.catAssetPaths.cute} type="video/mp4" />
+            </video>
+            {/* Fallback to SVG if video doesn't load */}
+            <div className="cat-illustration-fallback">
+              <CatSVG state={catState} />
+            </div>
           </div>
-          {/* Flower ring around cat */}
+          
+          {/* Enhanced flower ring around cat */}
           <div className="cat-flower-ring" aria-hidden="true">
-            {Array.from({ length: 8 }).map((_, i) => (
+            {Array.from({ length: 12 }).map((_, i) => (
               <div
                 key={i}
                 className="ring-flower"
-                style={{ transform: `rotate(${i * 45}deg) translateY(-90px)` }}
+                style={{ 
+                  transform: `rotate(${i * 30}deg) translateY(-100px)`,
+                  animationDelay: `${i * 0.1}s`
+                }}
               />
+            ))}
+          </div>
+
+          {/* Floating emojis around cat */}
+          <div className="cat-floating-emojis" aria-hidden="true">
+            {catState === "cute" && ["💕", "✨", "🌸", "💗"].map((emoji, i) => (
+              <span
+                key={i}
+                className="floating-emoji"
+                style={{
+                  left: `${20 + i * 20}%`,
+                  top: `${10 + (i % 2) * 80}%`,
+                  animationDelay: `${i * 0.3}s`,
+                }}
+              >
+                {emoji}
+              </span>
             ))}
           </div>
         </div>
 
-        {/* Buttons */}
+        {/* Buttons with enhanced animations */}
         <div className="button-group">
           {/* YES button */}
           <button
@@ -141,6 +230,11 @@ export default function GiftQuestion({ onYes }: GiftQuestionProps) {
           >
             <span className="btn-glow" />
             <span className="btn-text">YES! 🎁</span>
+            <span className="btn-sparkles">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <span key={i} className="btn-sparkle">✨</span>
+              ))}
+            </span>
           </button>
 
           {/* NO button */}

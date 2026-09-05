@@ -6,8 +6,10 @@ const FloralHeartLoader = dynamic(() => import("@/components/intro/FloralHeartLo
 const GiftQuestion = dynamic(() => import("@/components/gift-question/GiftQuestion"), { ssr: false });
 const PasscodeScene = dynamic(() => import("@/components/passcode/PasscodeScene"), { ssr: false });
 const LilyGarden = dynamic(() => import("@/components/flower-garden/LilyGarden"), { ssr: false });
+const TulipGarden = dynamic(() => import("@/components/tulip-garden/TulipGarden"), { ssr: false });
 const LongDistanceSection = dynamic(() => import("@/components/distance/LongDistanceSection"), { ssr: false });
 const LetterSection = dynamic(() => import("@/components/letter/LetterSection"), { ssr: false });
+const PhotoGallery = dynamic(() => import("@/components/gallery/PhotoGallery"), { ssr: false });
 const FutureSection = dynamic(() => import("@/components/future/FutureSection"), { ssr: false });
 const BirthdayCake = dynamic(() => import("@/components/birthday/BirthdayCake"), { ssr: false });
 const GrandFinale = dynamic(() => import("@/components/finale/GrandFinale"), { ssr: false });
@@ -53,21 +55,34 @@ export default function HomePage() {
 
     let currentIndex = 0;
     let isScrolling = false;
+    let lastScrollTime = 0;
+    const scrollCooldown = 1500; // Increased cooldown to prevent accidental scrolls
 
     const scrollToSection = (index: number) => {
       if (index < 0 || index >= sections.length) return;
+      
+      const now = Date.now();
+      if (now - lastScrollTime < scrollCooldown) return;
+      lastScrollTime = now;
+
       isScrolling = true;
       setIsSnapping(true);
       currentIndex = index;
       setActiveSection(index);
 
-      sections[index].scrollIntoView({ behavior: "smooth", block: "start" });
+      const section = sections[index];
+      if (section.classList.contains("custom-scroll")) {
+        // For scrollable sections, just scroll to top
+        section.scrollIntoView({ behavior: "smooth", block: "start" });
+      } else {
+        section.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
 
       if (snapTimeoutRef.current) clearTimeout(snapTimeoutRef.current);
       snapTimeoutRef.current = setTimeout(() => {
         isScrolling = false;
         setIsSnapping(false);
-      }, 900);
+      }, 1500);
     };
 
     const onWheel = (e: WheelEvent) => {
@@ -75,6 +90,13 @@ export default function HomePage() {
         e.preventDefault();
         return;
       }
+      
+      const currentSection = sections[currentIndex];
+      // Allow normal scrolling within custom-scroll sections
+      if (currentSection?.classList.contains("custom-scroll")) {
+        return; // Let normal scrolling happen
+      }
+
       e.preventDefault();
       const dir = e.deltaY > 0 ? 1 : -1;
       scrollToSection(currentIndex + dir);
@@ -86,8 +108,14 @@ export default function HomePage() {
     };
     const onTouchEnd = (e: TouchEvent) => {
       if (isScrolling) return;
+      
+      const currentSection = sections[currentIndex];
+      if (currentSection?.classList.contains("custom-scroll")) {
+        return; // Let normal touch scrolling happen
+      }
+
       const diff = touchStartY - e.changedTouches[0].clientY;
-      if (Math.abs(diff) > 40) {
+      if (Math.abs(diff) > 50) {
         scrollToSection(currentIndex + (diff > 0 ? 1 : -1));
       }
     };
@@ -95,6 +123,13 @@ export default function HomePage() {
     // Keyboard navigation
     const onKeyDown = (e: KeyboardEvent) => {
       if (isScrolling) return;
+      
+      const currentSection = sections[currentIndex];
+      if (currentSection?.classList.contains("custom-scroll")) {
+        // Allow normal keyboard navigation within scrollable sections
+        return;
+      }
+
       if (e.key === "ArrowDown" || e.key === "PageDown") {
         e.preventDefault();
         scrollToSection(currentIndex + 1);
@@ -126,7 +161,7 @@ export default function HomePage() {
       {/* Scroll progress dots */}
       {scene === "journey" && (
         <nav className="scroll-dots" aria-label="Section navigation">
-          {Array.from({ length: 7 }).map((_, i) => (
+          {Array.from({ length: 9 }).map((_, i) => (
             <button
               key={i}
               className={`scroll-dot ${activeSection === i ? "scroll-dot-active" : ""}`}
@@ -162,11 +197,19 @@ export default function HomePage() {
           </div>
 
           <div className="snap-section">
+            <TulipGarden />
+          </div>
+
+          <div className="snap-section">
             <LongDistanceSection />
           </div>
 
           <div className="snap-section">
             <LetterSection />
+          </div>
+
+          <div className="snap-section custom-scroll">
+            <PhotoGallery />
           </div>
 
           <div className="snap-section">

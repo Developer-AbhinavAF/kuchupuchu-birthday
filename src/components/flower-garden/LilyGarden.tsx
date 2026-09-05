@@ -292,24 +292,26 @@ export default function LilyGarden() {
 
   return (
     <div ref={sectionRef} className="lily-garden-section">
-      {/* Three.js canvas for ambient particles */}
-      <canvas ref={canvasRef} className="garden-three-canvas" aria-hidden="true" />
+      {/* Fixed rectangle container for flowers */}
+      <div className="garden-rectangle lily-rectangle" aria-hidden="true">
+        {/* Three.js canvas for ambient particles */}
+        <canvas ref={canvasRef} className="garden-three-canvas" aria-hidden="true" />
 
-      {/* Background atmosphere */}
-      <div className="garden-atmosphere" aria-hidden="true" />
+        {/* Background atmosphere */}
+        <div className="garden-atmosphere" aria-hidden="true" />
 
-      <div className="garden-text-container">
-        <p className="garden-text-reveal garden-eyebrow">A garden for you</p>
-        <h2 className="garden-text-reveal garden-heading">Where Every Lily Blooms With Love</h2>
-        <p className="garden-text-reveal garden-subtext">
-          These flowers grew from every thought of you, every quiet moment, every &ldquo;goodnight&rdquo; and every &ldquo;good morning&rdquo;.
-        </p>
-      </div>
+        <div className="garden-text-container">
+          <p className="garden-text-reveal garden-eyebrow">A garden for you</p>
+          <h2 className="garden-text-reveal garden-heading">Where Every Lily Blooms With Love</h2>
+          <p className="garden-text-reveal garden-subtext">
+            These flowers grew from every thought of you, every quiet moment, every &ldquo;goodnight&rdquo; and every &ldquo;good morning&rdquo;.
+          </p>
+        </div>
 
-      {/* SVG Lily Garden — Realistic */}
-      <div className="garden-svg-container" aria-hidden="true">
+        {/* SVG Lily Garden — Realistic */}
+        <div className="garden-svg-container" aria-hidden="true">
         <svg
-          viewBox="0 0 1100 560"
+          viewBox="0 0 1200 600"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
           className="garden-svg"
@@ -335,29 +337,29 @@ export default function LilyGarden() {
           </defs>
 
           {/* Ground */}
-          <ellipse cx="550" cy="545" rx="580" ry="35" fill="url(#groundGrad)" />
+          <ellipse cx="600" cy="580" rx="700" ry="35" fill="url(#groundGrad)" />
 
           {/* Grass tufts */}
           {Array.from({ length: 28 }).map((_, i) => (
             <g key={i} opacity="0.7">
-              <line x1={20 + i * 38} y1="548" x2={14 + i * 38} y2="524" stroke="#3A5A3A" strokeWidth="1.8" strokeLinecap="round" />
-              <line x1={20 + i * 38} y1="548" x2={26 + i * 38} y2="520" stroke="#4A6A4A" strokeWidth="1.8" strokeLinecap="round" />
-              <line x1={20 + i * 38} y1="548" x2={20 + i * 38} y2="518" stroke="#3A5A3A" strokeWidth="1.5" strokeLinecap="round" />
+              <line x1={20 + i * 42} y1="580" x2={14 + i * 42} y2="556" stroke="#3A5A3A" strokeWidth="1.8" strokeLinecap="round" />
+              <line x1={20 + i * 42} y1="580" x2={26 + i * 42} y2="552" stroke="#4A6A4A" strokeWidth="1.8" strokeLinecap="round" />
+              <line x1={20 + i * 42} y1="580" x2={20 + i * 42} y2="550" stroke="#3A5A3A" strokeWidth="1.5" strokeLinecap="round" />
             </g>
           ))}
 
           {/* Lily plants */}
           {lilies.map((lily, idx) => {
-            const bx = lily.x * 11;
+            const bx = lily.x * 12;
             const stemH = 130 + lily.size * 70;
-            const topY = 548 - stemH;
+            const topY = 580 - stemH;
             const sw = 2.5 * lily.size;
 
             return (
-              <g key={idx} className="lily-group" style={{ transformOrigin: `${bx}px 548px` }}>
+              <g key={idx} className="lily-group" style={{ transformOrigin: `${bx}px 580px` }}>
                 {/* Main stem with slight curve */}
                 <path
-                  d={`M ${bx} 548 C ${bx + lily.tilt * 3} ${548 - stemH * 0.4} ${bx + lily.tilt * 5} ${548 - stemH * 0.7} ${bx + lily.tilt * 2} ${topY + 20}`}
+                  d={`M ${bx} 580 C ${bx + lily.tilt * 3} ${580 - stemH * 0.4} ${bx + lily.tilt * 5} ${580 - stemH * 0.7} ${bx + lily.tilt * 2} ${topY + 20}`}
                   stroke="#3A5A3A"
                   strokeWidth={sw}
                   strokeLinecap="round"
@@ -366,7 +368,7 @@ export default function LilyGarden() {
                 />
                 {/* Secondary stem highlight */}
                 <path
-                  d={`M ${bx + 1} 548 C ${bx + lily.tilt * 3 + 1} ${548 - stemH * 0.4} ${bx + lily.tilt * 5 + 1} ${548 - stemH * 0.7} ${bx + lily.tilt * 2 + 1} ${topY + 20}`}
+                  d={`M ${bx + 1} 580 C ${bx + lily.tilt * 3 + 1} ${580 - stemH * 0.4} ${bx + lily.tilt * 5 + 1} ${580 - stemH * 0.7} ${bx + lily.tilt * 2 + 1} ${topY + 20}`}
                   stroke="#5A7A5A"
                   strokeWidth={sw * 0.4}
                   strokeLinecap="round"
@@ -639,6 +641,7 @@ export default function LilyGarden() {
             </svg>
           </div>
         ))}
+      </div>
       </div>
     </div>
   );

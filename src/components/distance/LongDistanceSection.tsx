@@ -27,6 +27,17 @@ export default function LongDistanceSection() {
       const starA = { x: W * 0.15, y: H * 0.35 };
       const starB = { x: W * 0.85, y: H * 0.35 };
 
+      // Generate zigzag path points
+      const zigzagPoints = [];
+      const segments = 8;
+      for (let i = 0; i <= segments; i++) {
+        const t = i / segments;
+        const x = lerp(starA.x, starB.x, t);
+        const zigzagY = Math.sin(t * Math.PI * 4) * 40; // Zigzag pattern
+        const y = lerp(starA.y, starB.y, t) + zigzagY;
+        zigzagPoints.push({ x, y });
+      }
+
       // Traveling particles
       interface TravelParticle {
         progress: number;
@@ -34,31 +45,53 @@ export default function LongDistanceSection() {
         color: string;
         size: number;
         active: boolean;
+        offset: number;
       }
-      const travelers: TravelParticle[] = Array.from({ length: 20 }, () => ({
+      const travelers: TravelParticle[] = Array.from({ length: 30 }, () => ({
         progress: Math.random(),
-        speed: 0.002 + Math.random() * 0.003,
-        color: ["#C4B5D4", "#F2D4D4", "#FFF8F0", "#8B2252"][Math.floor(Math.random() * 4)],
-        size: 1 + Math.random() * 2,
-        active: Math.random() > 0.3,
+        speed: 0.003 + Math.random() * 0.004,
+        color: ["#C4B5D4", "#F2D4D4", "#FFF8F0", "#8B2252", "#FF6B9D"][Math.floor(Math.random() * 5)],
+        size: 1.5 + Math.random() * 2.5,
+        active: Math.random() > 0.2,
+        offset: Math.random() * Math.PI * 2,
       }));
 
-      let constellationProgress = 0;
+      let pathProgress = 0;
       let frame = 0;
 
       function lerp(a: number, b: number, t: number) {
         return a + (b - a) * t;
       }
 
+      // Get position on zigzag path
+      function getZigzagPosition(progress: number) {
+        const totalSegments = zigzagPoints.length - 1;
+        const segmentProgress = progress * totalSegments;
+        const segmentIndex = Math.floor(segmentProgress);
+        const segmentT = segmentProgress - segmentIndex;
+
+        if (segmentIndex >= totalSegments) {
+          return zigzagPoints[zigzagPoints.length - 1];
+        }
+
+        const p1 = zigzagPoints[segmentIndex];
+        const p2 = zigzagPoints[segmentIndex + 1];
+        return {
+          x: lerp(p1.x, p2.x, segmentT),
+          y: lerp(p1.y, p2.y, segmentT),
+        };
+      }
+
       function drawStar(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, glow: number) {
         ctx.save();
-        // Glow
-        const grad = ctx.createRadialGradient(x, y, 0, x, y, size * 4);
+        // Enhanced glow
+        const grad = ctx.createRadialGradient(x, y, 0, x, y, size * 5);
         grad.addColorStop(0, `rgba(196, 181, 212, ${glow})`);
+        grad.addColorStop(0.5, `rgba(139, 34, 82, ${glow * 0.5})`);
         grad.addColorStop(1, "rgba(196, 181, 212, 0)");
         ctx.fillStyle = grad;
         ctx.beginPath();
-        ctx.arc(x, y, size * 4, 0, Math.PI * 2);
+        ctx.arc(x, y, size * 5, 0, Math.PI * 2);
         ctx.fill();
 
         // Star center
@@ -67,16 +100,30 @@ export default function LongDistanceSection() {
         ctx.arc(x, y, size, 0, Math.PI * 2);
         ctx.fill();
 
-        // Sparkle lines
-        for (let i = 0; i < 4; i++) {
-          const angle = (i / 4) * Math.PI * 2;
-          ctx.strokeStyle = `rgba(255, 248, 240, ${glow * 0.8})`;
-          ctx.lineWidth = 0.8;
+        // Enhanced sparkle lines
+        for (let i = 0; i < 6; i++) {
+          const angle = (i / 6) * Math.PI * 2 + frame * 0.02;
+          ctx.strokeStyle = `rgba(255, 248, 240, ${glow * 0.9})`;
+          ctx.lineWidth = 1;
           ctx.beginPath();
           ctx.moveTo(x, y);
-          ctx.lineTo(x + Math.cos(angle) * size * 3, y + Math.sin(angle) * size * 3);
+          ctx.lineTo(x + Math.cos(angle) * size * 4, y + Math.sin(angle) * size * 4);
           ctx.stroke();
         }
+        ctx.restore();
+      }
+
+      function drawHeart(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, alpha: number) {
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = "#DC2626";
+        ctx.beginPath();
+        ctx.moveTo(x, y + size * 0.3);
+        ctx.bezierCurveTo(x, y - size * 0.1, x - size, y - size * 0.1, x - size, y + size * 0.3);
+        ctx.bezierCurveTo(x - size, y + size * 0.7, x, y + size * 1.1, x, y + size * 1.3);
+        ctx.bezierCurveTo(x, y + size * 1.1, x + size, y + size * 0.7, x + size, y + size * 0.3);
+        ctx.bezierCurveTo(x + size, y - size * 0.1, x, y - size * 0.1, x, y + size * 0.3);
+        ctx.fill();
         ctx.restore();
       }
 
@@ -85,75 +132,122 @@ export default function LongDistanceSection() {
         frame++;
         ctx.clearRect(0, 0, W, H);
 
-        const pulse = 0.6 + Math.sin(frame * 0.04) * 0.4;
-        constellationProgress = Math.min(1, constellationProgress + 0.003);
+        const pulse = 0.6 + Math.sin(frame * 0.03) * 0.4;
+        pathProgress = Math.min(1, pathProgress + 0.004);
 
-        // Background stars
-        if (frame % 3 === 0) {
-          for (let i = 0; i < 3; i++) {
+        // Enhanced background stars
+        if (frame % 2 === 0) {
+          for (let i = 0; i < 4; i++) {
             const sx = Math.random() * W;
             const sy = Math.random() * H;
-            ctx.fillStyle = `rgba(255, 248, 240, ${Math.random() * 0.3})`;
+            const starSize = Math.random() * 1.5;
+            const starAlpha = Math.random() * 0.4;
+            ctx.fillStyle = `rgba(255, 248, 240, ${starAlpha})`;
             ctx.beginPath();
-            ctx.arc(sx, sy, Math.random() * 1.2, 0, Math.PI * 2);
+            ctx.arc(sx, sy, starSize, 0, Math.PI * 2);
             ctx.fill();
           }
         }
 
-        // Constellation line
-        if (constellationProgress > 0) {
-          const endX = lerp(starA.x, starB.x, constellationProgress);
-          const endY = lerp(starA.y, starB.y, constellationProgress);
+        // Draw zigzag path
+        if (pathProgress > 0) {
+          const visibleSegments = Math.floor(pathProgress * segments);
+          const partialSegment = (pathProgress * segments) % 1;
+
           ctx.save();
-          ctx.strokeStyle = "rgba(196, 181, 212, 0.3)";
-          ctx.lineWidth = 1;
-          ctx.setLineDash([4, 8]);
+          ctx.strokeStyle = "rgba(220, 38, 38, 0.4)"; // Red string color
+          ctx.lineWidth = 2;
+          ctx.setLineDash([8, 12]);
+          ctx.lineCap = "round";
+          ctx.lineJoin = "round";
+
           ctx.beginPath();
           ctx.moveTo(starA.x, starA.y);
-          ctx.lineTo(endX, endY);
+
+          for (let i = 0; i < visibleSegments; i++) {
+            if (i < zigzagPoints.length - 1) {
+              ctx.lineTo(zigzagPoints[i + 1].x, zigzagPoints[i + 1].y);
+            }
+          }
+
+          // Draw partial segment
+          if (visibleSegments < zigzagPoints.length - 1) {
+            const current = zigzagPoints[visibleSegments];
+            const next = zigzagPoints[visibleSegments + 1];
+            const partialX = lerp(current.x, next.x, partialSegment);
+            const partialY = lerp(current.y, next.y, partialSegment);
+            ctx.lineTo(partialX, partialY);
+          }
+
           ctx.stroke();
+
+          // Add hearts along the path
+          ctx.setLineDash([]);
+          for (let i = 0; i < visibleSegments; i++) {
+            const point = zigzagPoints[i];
+            const heartAlpha = Math.min(1, (pathProgress - (i / segments)) * 3);
+            if (heartAlpha > 0) {
+              drawHeart(ctx, point.x, point.y, 8, heartAlpha * 0.6);
+            }
+          }
+
           ctx.restore();
         }
 
-        // Traveling particles
+        // Enhanced traveling particles on zigzag path
         travelers.forEach((t) => {
           if (!t.active) return;
           t.progress += t.speed;
           if (t.progress > 1) t.progress = 0;
 
-          const px = lerp(starA.x, starB.x, t.progress);
-          const py = lerp(starA.y, starB.y, t.progress) + Math.sin(t.progress * Math.PI) * -30;
+          const pos = getZigzagPosition(t.progress);
+          const wobble = Math.sin(frame * 0.05 + t.offset) * 8;
+          const py = pos.y + wobble;
 
           ctx.save();
-          ctx.globalAlpha = Math.sin(t.progress * Math.PI) * 0.9;
+          ctx.globalAlpha = Math.sin(t.progress * Math.PI) * 0.95;
           ctx.fillStyle = t.color;
+          ctx.shadowColor = t.color;
+          ctx.shadowBlur = 10;
           ctx.beginPath();
-          ctx.arc(px, py, t.size, 0, Math.PI * 2);
+          ctx.arc(pos.x, py, t.size, 0, Math.PI * 2);
           ctx.fill();
           ctx.restore();
         });
 
         // Draw stars
-        drawStar(ctx, starA.x, starA.y, 5, pulse);
-        drawStar(ctx, starB.x, starB.y, 5, 1 - pulse * 0.3 + 0.3);
+        drawStar(ctx, starA.x, starA.y, 6, pulse);
+        drawStar(ctx, starB.x, starB.y, 6, 1 - pulse * 0.3 + 0.3);
 
-        // Heart constellation at midpoint
-        if (constellationProgress > 0.8) {
-          const heartProgress = (constellationProgress - 0.8) / 0.2;
-          const hx = (starA.x + starB.x) / 2;
-          const hy = starA.y - 20;
-          const hs = 12 * heartProgress;
+        // Enhanced heart constellation at midpoint
+        if (pathProgress > 0.7) {
+          const heartProgress = (pathProgress - 0.7) / 0.3;
+          const midpoint = getZigzagPosition(0.5);
+          const hy = midpoint.y - 30;
+          const hs = 15 * heartProgress;
 
+          // Multiple pulsing hearts
+          for (let i = 0; i < 3; i++) {
+            const delay = i * 0.3;
+            const localProgress = Math.max(0, Math.min(1, (heartProgress - delay) / 0.3));
+            if (localProgress > 0) {
+              const heartPulse = 0.8 + Math.sin(frame * 0.08 + i) * 0.2;
+              drawHeart(ctx, midpoint.x, hy, hs * heartPulse, localProgress * 0.8);
+            }
+          }
+        }
+
+        // Connecting red string animation
+        if (pathProgress > 0.9) {
+          const stringProgress = (pathProgress - 0.9) / 0.1;
           ctx.save();
-          ctx.globalAlpha = heartProgress * 0.6;
-          ctx.fillStyle = "#8B2252";
+          ctx.strokeStyle = `rgba(220, 38, 38, ${stringProgress * 0.6})`;
+          ctx.lineWidth = 1.5;
+          ctx.setLineDash([3, 6]);
           ctx.beginPath();
-          ctx.moveTo(hx, hy + hs * 0.3);
-          ctx.bezierCurveTo(hx, hy - hs * 0.1, hx - hs, hy - hs * 0.1, hx - hs, hy + hs * 0.3);
-          ctx.bezierCurveTo(hx - hs, hy + hs * 0.7, hx, hy + hs * 1.1, hx, hy + hs * 1.3);
-          ctx.bezierCurveTo(hx, hy + hs * 1.1, hx + hs, hy + hs * 0.7, hx + hs, hy + hs * 0.3);
-          ctx.bezierCurveTo(hx + hs, hy - hs * 0.1, hx, hy - hs * 0.1, hx, hy + hs * 0.3);
-          ctx.fill();
+          ctx.moveTo(starA.x, starA.y + 20);
+          ctx.lineTo(starB.x, starB.y + 20);
+          ctx.stroke();
           ctx.restore();
         }
       }
@@ -174,17 +268,37 @@ export default function LongDistanceSection() {
       const textItems = section.querySelectorAll(".distance-text-item");
       gsap.fromTo(
         textItems,
-        { opacity: 0, y: 40, filter: "blur(8px)" },
+        { opacity: 0, y: 50, filter: "blur(10px)", scale: 0.9 },
         {
           opacity: 1,
           y: 0,
           filter: "blur(0px)",
-          duration: 1,
-          stagger: 0.4,
-          ease: "power2.out",
+          scale: 1,
+          duration: 1.2,
+          stagger: 0.5,
+          ease: "power3.out",
           scrollTrigger: {
             trigger: section,
-            start: "top 60%",
+            start: "top 55%",
+            toggleActions: "play none none reverse",
+          },
+        }
+      );
+
+      // Animate location labels
+      const labels = section.querySelectorAll(".distance-label");
+      gsap.fromTo(
+        labels,
+        { opacity: 0, scale: 0.5 },
+        {
+          opacity: 1,
+          scale: 1,
+          duration: 0.8,
+          stagger: 0.3,
+          ease: "back.out(1.7)",
+          scrollTrigger: {
+            trigger: section,
+            start: "top 50%",
             toggleActions: "play none none reverse",
           },
         }
